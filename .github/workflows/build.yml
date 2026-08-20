@@ -13,7 +13,7 @@ jobs:
       - name: Download project
         uses: actions/checkout@v4
 
-          - name: Extract project ZIP
+- name: Extract project ZIP
       run: |
         unzip -o Daily_Routine_GitHub_APK_Project.zip -d project
         cd project
