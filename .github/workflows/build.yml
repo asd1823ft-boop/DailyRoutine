@@ -20,14 +20,19 @@ jobs:
           chmod +x gradlew
 
           cat > fix.gradle <<'EOF'
-          allprojects {
-              tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
-                  sourceCompatibility = '17'
-                  targetCompatibility = '17'
+          import org.gradle.api.JavaVersion
+          import org.gradle.api.tasks.compile.JavaCompile
+
+          allprojects { project ->
+              project.tasks.withType(JavaCompile).configureEach {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
               }
 
-              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                  kotlinOptions.jvmTarget = '17'
+              project.tasks.configureEach { task ->
+                  if (task.name.contains("KotlinCompile") && task.hasProperty("kotlinOptions")) {
+                      task.kotlinOptions.jvmTarget = "17"
+                  }
               }
           }
           EOF
