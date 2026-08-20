@@ -25,14 +25,14 @@ jobs:
           cd project
           chmod +x gradlew
           
-          # تعديل إعدادات Java و Kotlin في جميع ملفات Gradle
+          # تعديل jvmTarget في ملفات Gradle
           find . -name "*.gradle" -o -name "*.gradle.kts" | while read f; do
-            sed -i "s/jvmTarget[[:space:]]*=[[:space:]]*['\"]1\.8['\"]/jvmTarget = '17'/g" "$f"
-            sed -i "s/sourceCompatibility[[:space:]]*=[[:space:]]*['\"]1\.8['\"]/sourceCompatibility = JavaVersion.VERSION_17/g" "$f"
-            sed -i "s/targetCompatibility[[:space:]]*=[[:space:]]*['\"]1\.8['\"]/targetCompatibility = JavaVersion.VERSION_17/g" "$f"
+            sed -i 's/jvmTarget[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/jvmTarget = '\''17'\''/g' "$f"
+            sed -i 's/sourceCompatibility[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/sourceCompatibility = JavaVersion.VERSION_17/g' "$f"
+            sed -i 's/targetCompatibility[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/targetCompatibility = JavaVersion.VERSION_17/g' "$f"
           done
           
-          # إضافة إعدادات التطابق في build.gradle الخاص بالتطبيق
+          # إضافة إعدادات التطابق في app/build.gradle
           if [ -f "app/build.gradle" ]; then
             sed -i '/android {/a\
         compileOptions {\
