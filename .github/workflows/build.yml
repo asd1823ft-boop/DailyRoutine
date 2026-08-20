@@ -25,7 +25,7 @@ jobs:
           cd project
           chmod +x gradlew
           
-          # استخراج الـ package name من ملفات المشروع
+          # استخراج الـ package name
           PACKAGE=$(find app/src/main/java -name "*.kt" -o -name "*.java" | head -1 | sed 's|app/src/main/java/||' | sed 's|/.*||' | tr '/' '.')
           
           if [ -z "$PACKAGE" ]; then
@@ -37,6 +37,7 @@ jobs:
           # حذف الملفات القديمة
           rm -f settings.gradle.kts
           rm -f app/build.gradle.kts
+          rm -f app/build.gradle
           
           # إنشاء settings.gradle
           cat > settings.gradle << 'EOF'
@@ -58,7 +59,7 @@ jobs:
           include(":app")
           EOF
           
-          # إنشاء app/build.gradle مع الـ package المستخرج
+          # إنشاء app/build.gradle مع التصحيحات
           cat > app/build.gradle << EOF
           plugins {
               id("com.android.application")
@@ -79,7 +80,7 @@ jobs:
           
               buildTypes {
                   release {
-                      isMinifyEnabled = false
+                      minifyEnabled = false
                       proguardFiles(
                           getDefaultProguardFile("proguard-android-optimize.txt"),
                           "proguard-rules.pro"
