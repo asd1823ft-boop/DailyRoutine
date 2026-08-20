@@ -14,40 +14,25 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Extract project ZIP
-        shell: bash
         run: |
-          set -e
-
           unzip -o Daily_Routine_GitHub_APK_Project.zip -d project
-
           cd project
           chmod +x gradlew
 
-          cat > fix.gradle <<'EOF'
-          import org.gradle.api.tasks.compile.JavaCompile
-          import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+          find . -name "*.gradle" -o -name "*.gradle.kts" | while read f; do
+            sed -i "s/sourceCompatibility[[:space:]]*=[[:space:]]*['\"]1\.8['\"]/sourceCompatibility = '17'/g" "$f"
+            sed -i "s/targetCompatibility[[:space:]]*=[[:space:]]*['\"]1\.8['\"]/targetCompatibility = '17'/g" "$f"
+            sed -i "s/jvmTarget[[:space:]]*=[[:space:]]*['\"]1\.8['\"]/jvmTarget = '17'/g" "$f"
+          done
 
-          allprojects {
-              tasks.withType(JavaCompile).configureEach {
-                  sourceCompatibility = '17'
-                  targetCompatibility = '17'
-              }
-
-              tasks.withType(KotlinCompile).configureEach {
-                  kotlinOptions {
-                      jvmTarget = '17'
-                  }
-              }
-          }
-          EOF
-
-          ./gradlew -I fix.gradle assembleDebug --stacktrace
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
