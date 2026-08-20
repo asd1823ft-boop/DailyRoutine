@@ -13,26 +13,26 @@ jobs:
       - name: Download project
         uses: actions/checkout@v4
 
-      - name: Extract project ZIP
-        run: |
-  unzip -o Daily_Routine_GitHub_APK_Project.zip -d project
-  cd project
-  chmod +x gradlew
+          - name: Extract project ZIP
+      run: |
+        unzip -o Daily_Routine_GitHub_APK_Project.zip -d project
+        cd project
+        chmod +x gradlew
 
-  cat > fix.gradle <<'EOF'
-  allprojects {
-      tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
-          sourceCompatibility = '17'
-          targetCompatibility = '17'
-      }
+        cat > fix.gradle <<'EOF'
+        allprojects {
+            tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+                sourceCompatibility = '17'
+                targetCompatibility = '17'
+            }
 
-      tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-          kotlinOptions.jvmTarget = '17'
-      }
-  }
-  EOF
+            tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                kotlinOptions.jvmTarget = '17'
+            }
+        }
+        EOF
 
-  ./gradlew -I fix.gradle assembleDebug
+        ./gradlew -I fix.gradle assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
