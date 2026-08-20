@@ -34,6 +34,9 @@ jobs:
           
           echo "Using package: $PACKAGE"
           
+          # تحويل package name إلى مسار مجلدات
+          PACKAGE_PATH=$(echo $PACKAGE | tr '.' '/')
+          
           # حذف الملفات القديمة
           rm -f settings.gradle.kts
           rm -f app/build.gradle.kts
@@ -60,18 +63,18 @@ jobs:
           EOF
           
           # إنشاء app/build.gradle
-          cat > app/build.gradle << EOF
+          cat > app/build.gradle << 'EOF'
           plugins {
               id("com.android.application")
               id("org.jetbrains.kotlin.android")
           }
           
           android {
-              namespace = "$PACKAGE"
+              namespace = "com.example.dailyroutine"
               compileSdk = 34
           
               defaultConfig {
-                  applicationId = "$PACKAGE"
+                  applicationId = "com.example.dailyroutine"
                   minSdk = 21
                   targetSdk = 34
                   versionCode = 1
@@ -111,11 +114,30 @@ jobs:
           }
           EOF
           
-          # إنشاء AndroidManifest.xml بدون icon
+          # إنشاء المجلدات
+          mkdir -p app/src/main/java/com/example/dailyroutine
+          
+          # إنشاء MainActivity.kt
+          cat > app/src/main/java/com/example/dailyroutine/MainActivity.kt << 'EOF'
+          package com.example.dailyroutine
+          
+          import android.os.Bundle
+          import androidx.appcompat.app.AppCompatActivity
+          
+          class MainActivity : AppCompatActivity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  setContentView(R.layout.activity_main)
+              }
+          }
+          EOF
+          
+          # إنشاء AndroidManifest.xml
           mkdir -p app/src/main
           cat > app/src/main/AndroidManifest.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.example.dailyroutine">
           
               <application
                   android:allowBackup="true"
@@ -132,22 +154,6 @@ jobs:
               </application>
           
           </manifest>
-          EOF
-          
-          # إنشاء MainActivity.kt
-          mkdir -p app/src/main/java/${PACKAGE//.//}
-          cat > app/src/main/java/${PACKAGE//.//}/MainActivity.kt << 'EOF'
-          package $PACKAGE
-          
-          import android.os.Bundle
-          import androidx.appcompat.app.AppCompatActivity
-          
-          class MainActivity : AppCompatActivity() {
-              override fun onCreate(savedInstanceState: Bundle?) {
-                  super.onCreate(savedInstanceState)
-                  setContentView(R.layout.activity_main)
-              }
-          }
           EOF
           
           # إنشاء activity_main.xml
@@ -181,7 +187,6 @@ jobs:
           EOF
           
           # إنشاء themes.xml
-          mkdir -p app/src/main/res/values
           cat > app/src/main/res/values/themes.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
