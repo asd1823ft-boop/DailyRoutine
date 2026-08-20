@@ -25,35 +25,96 @@ jobs:
           cd project
           chmod +x gradlew
           
-          # تعديل jvmTarget في كل ملفات Gradle
-          find . -name "*.gradle" -o -name "*.gradle.kts" | while read f; do
-            sed -i 's/jvmTarget[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/jvmTarget = '\''17'\''/g' "$f"
-            sed -i 's/sourceCompatibility[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/sourceCompatibility = JavaVersion.VERSION_17/g' "$f"
-            sed -i 's/targetCompatibility[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/targetCompatibility = JavaVersion.VERSION_17/g' "$f"
-          done
+          # استخراج الـ package name من ملفات المشروع
+          PACKAGE=$(find app/src/main/java -name "*.kt" -o -name "*.java" | head -1 | sed 's|app/src/main/java/||' | sed 's|/.*||' | tr '/' '.')
           
-          # إضافة إعدادات JVM Toolchain في build.gradle الرئيسي
-          echo "" >> build.gradle
-          echo "subprojects {" >> build.gradle
-          echo "    afterEvaluate { project ->" >> build.gradle
-          echo "        if (project.hasProperty(\"android\")) {" >> build.gradle
-          echo "            android {" >> build.gradle
-          echo "                compileOptions {" >> build.gradle
-          echo "                    sourceCompatibility JavaVersion.VERSION_17" >> build.gradle
-          echo "                    targetCompatibility JavaVersion.VERSION_17" >> build.gradle
-          echo "                }" >> build.gradle
-          echo "                kotlinOptions {" >> build.gradle
-          echo "                    jvmTarget = \"17\"" >> build.gradle
-          echo "                }" >> build.gradle
-          echo "            }" >> build.gradle
-          echo "        }" >> build.gradle
-          echo "    }" >> build.gradle
-          echo "}" >> build.gradle
+          if [ -z "$PACKAGE" ]; then
+            PACKAGE="com.example.dailyroutine"
+          fi
           
-          # إضافة إعداد في gradle.properties
-          echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
+          echo "Using package: $PACKAGE"
           
-          ./gradlew assembleDebug
+          # حذف الملفات القديمة
+          rm -f settings.gradle.kts
+          rm -f app/build.gradle.kts
+          
+          # إنشاء settings.gradle
+          cat > settings.gradle << 'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "DailyRoutine"
+          include(":app")
+          EOF
+          
+          # إنشاء app/build.gradle مع الـ package المستخرج
+          cat > app/build.gradle << EOF
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+          
+          android {
+              namespace = "$PACKAGE"
+              compileSdk = 34
+          
+              defaultConfig {
+                  applicationId = "$PACKAGE"
+                  minSdk = 21
+                  targetSdk = 34
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+          
+              buildTypes {
+                  release {
+                      isMinifyEnabled = false
+                      proguardFiles(
+                          getDefaultProguardFile("proguard-android-optimize.txt"),
+                          "proguard-rules.pro"
+                      )
+                  }
+              }
+          
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          
+          dependencies {
+              implementation("androidx.core:core-ktx:1.12.0")
+              implementation("androidx.appcompat:appcompat:1.6.1")
+              implementation("com.google.android.material:material:1.11.0")
+              implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+          }
+          EOF
+          
+          # إنشاء gradle.properties
+          cat > gradle.properties << 'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.enableJetifier=true
+          kotlin.code.style=official
+          kotlin.jvm.target.validation.mode=warning
+          EOF
+          
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
