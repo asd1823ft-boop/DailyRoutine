@@ -26,9 +26,9 @@ jobs:
           chmod +x gradlew
           
           # استخراج الـ package name
-          PACKAGE=$(find app/src/main/java -name "*.kt" -o -name "*.java" | head -1 | sed 's|app/src/main/java/||' | sed 's|/.*||' | tr '/' '.')
+          PACKAGE=$(find app/src/main/java -type d | head -1 | sed 's|app/src/main/java/||' | tr '/' '.')
           
-          if [ -z "$PACKAGE" ]; then
+          if [ "$PACKAGE" = "com" ] || [ -z "$PACKAGE" ]; then
             PACKAGE="com.example.dailyroutine"
           fi
           
@@ -59,7 +59,7 @@ jobs:
           include(":app")
           EOF
           
-          # إنشاء app/build.gradle مع التصحيحات
+          # إنشاء app/build.gradle
           cat > app/build.gradle << EOF
           plugins {
               id("com.android.application")
@@ -76,6 +76,8 @@ jobs:
                   targetSdk = 34
                   versionCode = 1
                   versionName = "1.0"
+          
+                  testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
               }
           
               buildTypes {
@@ -103,7 +105,43 @@ jobs:
               implementation("androidx.appcompat:appcompat:1.6.1")
               implementation("com.google.android.material:material:1.11.0")
               implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+              testImplementation("junit:junit:4.13.2")
+              androidTestImplementation("androidx.test.ext:junit:1.1.5")
+              androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
           }
+          EOF
+          
+          # إنشاء AndroidManifest.xml
+          mkdir -p app/src/main
+          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          
+              <application
+                  android:allowBackup="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:label="@string/app_name"
+                  android:theme="@style/Theme.AppCompat.Light">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          
+          </manifest>
+          EOF
+          
+          # إنشاء strings.xml
+          mkdir -p app/src/main/res/values
+          cat > app/src/main/res/values/strings.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">Daily Routine</string>
+          </resources>
           EOF
           
           # إنشاء gradle.properties
