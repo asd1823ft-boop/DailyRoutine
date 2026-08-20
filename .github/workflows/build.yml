@@ -25,26 +25,28 @@ jobs:
           cd project
           chmod +x gradlew
           
-          # تعديل jvmTarget في ملفات Gradle
-          find . -name "*.gradle" -o -name "*.gradle.kts" | while read f; do
+          # تعديل ملفات Gradle
+          for f in $(find . -name "*.gradle" -o -name "*.gradle.kts"); do
             sed -i 's/jvmTarget[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/jvmTarget = '\''17'\''/g' "$f"
             sed -i 's/sourceCompatibility[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/sourceCompatibility = JavaVersion.VERSION_17/g' "$f"
             sed -i 's/targetCompatibility[[:space:]]*=[[:space:]]*['\''"]1\.8['\''"]/targetCompatibility = JavaVersion.VERSION_17/g' "$f"
           done
           
-          # إضافة إعدادات التطابق في app/build.gradle
-          if [ -f "app/build.gradle" ]; then
-            sed -i '/android {/a\
-        compileOptions {\
-            sourceCompatibility JavaVersion.VERSION_17\
-            targetCompatibility JavaVersion.VERSION_17\
-        }\
-        kotlinOptions {\
-            jvmTarget = "17"\
-        }' app/build.gradle
-          fi
+          # إضافة إعدادات في app/build.gradle
+          cat >> app/build.gradle << 'EOF'
           
-          # إعداد JVM Toolchain في gradle.properties
+          android {
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          EOF
+          
+          # إضافة إعداد في gradle.properties
           echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
           
           ./gradlew assembleDebug
